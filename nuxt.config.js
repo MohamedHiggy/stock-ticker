@@ -43,7 +43,7 @@ export default {
   },
 
   axios: {
-    baseURL: '/',
+    baseURL: 'https://www.alphavantage.co/',
   },
 
   build: {
