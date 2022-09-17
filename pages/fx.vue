@@ -3,7 +3,7 @@
     <p v-if="isErrorMsg" class="text-red-500 font-bold text-xl">
       {{ errorMsg }}
     </p>
-    <HeaderActionForm @addSymbol="fetchData" :isLoading="isLoading" :items="currency" />
+    <HeaderActionForm @addSymbol="fetchData" :isLoading="isLoading" :items="currency" :is-fx="true" />
     <div v-if="stock" class="flex items-center justify-center mt-4">
       <StockMockupCard :stock="stock" />
     </div>
@@ -16,7 +16,8 @@ export default {
   name: "StockPricesPage",
   data() {
     return {
-      symbol: "EUR",
+      from_symbol: "USD",
+      to_symbol: "EUR",
       stock: null,
       isLoading: false,
       errorMsg: "data not found",
@@ -25,7 +26,10 @@ export default {
     };
   },
   mounted() {
-    this.fetchData(this.symbol);
+    this.fetchData({
+      from_symbol: this.from_symbol,
+      to_symbol: this.to_symbol,
+    });
   },
   computed: {
     currency() {
@@ -33,16 +37,16 @@ export default {
     },
   },
   methods: {
-    async fetchData(symbol) {
-      this.symbol = symbol;
+    async fetchData(event) {
+      this.from_symbol = event.from_symbol;
+      this.to_symbol = event.to_symbol;
       this.isLoading = true;
       await this.$axios
         .get(
-          `/query?function=FX_DAILY&from_symbol=${symbol}&to_symbol=USD&outputsize=full&apikey=NRUUDHFS7BXY9FE2`
+          `/query?function=FX_DAILY&from_symbol=${event.from_symbol}&to_symbol=${event.to_symbol}&outputsize=full&apikey=NRUUDHFS7BXY9FE2`
         )
         .then((res) => {
           this.isLoading = false;
-          console.log(res);
           if (res && res.data) {
             this.stockMarketHistory = res.data["Time Series FX (Daily)"];
             for (const property in this.stockMarketHistory) {
@@ -51,7 +55,8 @@ export default {
               let yesterdayDate = yesterday.toISOString().slice(0, 10);
               if (property === yesterdayDate) {
                 this.stock = {
-                  symbol: symbol,
+                  from_symbol: this.from_symbol,
+                  to_symbol: this.to_symbol,
                   open: this.stockMarketHistory[property]["1. open"],
                   close: this.stockMarketHistory[property]["4. close"],
                   high: this.stockMarketHistory[property]["2. high"],

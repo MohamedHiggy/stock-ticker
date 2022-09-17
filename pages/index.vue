@@ -3,11 +3,7 @@
     <p v-if="isErrorMsg" class="text-red-500 font-bold text-xl">
       {{ errorMsg }}
     </p>
-    <HeaderActionForm
-      @addSymbol="fetchData"
-      :isLoading="isLoading"
-      :items="symbols"
-    />
+    <HeaderActionForm @addSymbol="fetchData" :isLoading="isLoading" :items="symbols" />
     <div v-if="stock" class="flex items-center justify-center mt-4">
       <StockMockupCard :stock="stock" />
     </div>

@@ -21,7 +21,15 @@
       >
         {{ stock.close.slice(0, -2) }}
       </p>
-      <p class="text-2xl text-gray-800">{{ stock.symbol }}</p>
+      <p class="text-2xl text-gray-800" v-if="stock.symbol">
+        {{ stock.symbol }}
+      </p>
+      <p
+        class="text-2xl text-gray-800"
+        v-if="stock.from_symbol && stock.to_symbol"
+      >
+        {{ stock.from_symbol }} - {{ stock.to_symbol }}
+      </p>
     </div>
     <div class="flex flex-col capitalize">
       <p>open: {{ stock.open.slice(0, -2) }}</p>
