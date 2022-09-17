@@ -89,85 +89,76 @@ export default {
       }
     },
     async fetchData(symbol) {
-      if (symbol === this.symbol) {
-        this.isErrorMsg = true;
-        this.errorMsg = "the symbol is the same";
-        setTimeout(() => {
-          this.isErrorMsg = false;
-        }, 3000);
-      } else {
-        this.historyDates = [];
-        this.symbol = symbol;
-        this.isLoading = true;
-        await this.$axios
-          .get(
-            `/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=NRUUDHFS7BXY9FE2`
-          )
-          .then((res) => {
-            this.isLoading = false;
-            if (res && res.data) {
-              this.checkIfExist(
-                res.data["Time Series (Daily)"],
-                this.marketHistory
-              );
-              const prices = [];
-              for (const key in res.data["Time Series (Daily)"]) {
-                prices.push(res.data["Time Series (Daily)"][key]["4. close"]);
-              }
-              this.checkIfExist(prices, this.prices);
+      this.historyDates = [];
+      this.symbol = symbol;
+      this.isLoading = true;
+      await this.$axios
+        .get(
+          `/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=NRUUDHFS7BXY9FE2`
+        )
+        .then((res) => {
+          this.isLoading = false;
+          if (res && res.data) {
+            this.checkIfExist(
+              res.data["Time Series (Daily)"],
+              this.marketHistory
+            );
+            const prices = [];
+            for (const key in res.data["Time Series (Daily)"]) {
+              prices.push(res.data["Time Series (Daily)"][key]["4. close"]);
+            }
+            this.checkIfExist(prices, this.prices);
 
-              let items = res.data["Time Series (Daily)"];
-              for (const property in items) {
-                let yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                let yesterdayDate = yesterday.toISOString().slice(0, 10);
-                if (property === yesterdayDate) {
-                  const stock = {
-                    symbol: symbol,
-                    open: items[property]["1. open"],
-                    close: items[property]["4. close"],
-                    high: items[property]["2. high"],
-                    low: items[property]["3. low"],
-                  };
-                  if (
-                    this.stocks.findIndex((item) => item.symbol === symbol) ===
-                    -1
-                  ) {
-                    this.stocks.push(stock);
-                  } else {
-                    this.stocks.splice(
-                      this.stocks.findIndex((item) => item.symbol === symbol),
-                      1,
-                      stock
-                    );
-                  }
+            let items = res.data["Time Series (Daily)"];
+            for (const property in items) {
+              let yesterday = new Date();
+              yesterday.setDate(yesterday.getDate() - 1);
+              let yesterdayDate = yesterday.toISOString().slice(0, 10);
+              if (property === yesterdayDate) {
+                const stock = {
+                  symbol: symbol,
+                  open: items[property]["1. open"],
+                  close: items[property]["4. close"],
+                  high: items[property]["2. high"],
+                  low: items[property]["3. low"],
+                };
+                if (
+                  this.stocks.findIndex((item) => item.symbol === symbol) === -1
+                ) {
+                  this.stocks.push(stock);
+                } else {
+                  this.stocks.splice(
+                    this.stocks.findIndex((item) => item.symbol === symbol),
+                    1,
+                    stock
+                  );
                 }
-                let formattedYear = property.replace(
-                  /(\d{4})-(\d{2})-(\d{2})/,
-                  "$2/$3/$1"
-                );
-                this.historyDates.unshift(formattedYear);
-                this.isCalling = true;
-                setTimeout(() => {
-                  this.isCalling = false;
-                }, 300);
               }
-            }
-            if (res && res.data["Error Message"]) {
-              this.isErrorMsg = true;
+              let formattedYear = property.replace(
+                /(\d{4})-(\d{2})-(\d{2})/,
+                "$2/$3/$1"
+              );
+              this.historyDates.unshift(formattedYear);
+              this.isCalling = true;
               setTimeout(() => {
-                this.isErrorMsg = false;
-              }, 3000);
+                this.isCalling = false;
+              }, 300);
             }
-            if (res && res.data["Note"]) {
-              this.isErrorMsg = true;
-              this.errorMsg = "API limit reached 5 calls per minute";
-              setTimeout(() => {
-                this.isErrorMsg = false;
-              }, 3000);
-            }
-          });
-      }
+          }
+          if (res && res.data["Error Message"]) {
+            this.isErrorMsg = true;
+            setTimeout(() => {
+              this.isErrorMsg = false;
+            }, 3000);
+          }
+          if (res && res.data["Note"]) {
+            this.isErrorMsg = true;
+            this.errorMsg = "API limit reached 5 calls per minute";
+            setTimeout(() => {
+              this.isErrorMsg = false;
+            }, 3000);
+          }
+        });
     },
   },
 };

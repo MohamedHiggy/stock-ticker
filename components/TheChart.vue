@@ -46,7 +46,7 @@ export default {
       let newPrices = [];
       this.prices.forEach((price) => {
         newPrices.push({
-          label: this.label,
+          label: price.symbol ? price.symbol : price.from_symbol + " to " + price.to_symbol,
           data: price.data,
           fill: false,
           backgroundColor: `rgba(${Math.floor(
