@@ -63,7 +63,7 @@ export default {
   },
   methods: {
     login() {
-      this.$store.dispatch("checkIfUserExist", this.username);
+      this.$store.dispatch("login", this.username);
     },
   },
 };
