@@ -1,4 +1,3 @@
-// add array of objects to the array of foreign exchange rates
 const foreignExchange = [
   { symbol: "USD", name: "US Dollar" },
   { symbol: "EUR", name: "Euro" },
