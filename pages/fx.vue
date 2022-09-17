@@ -56,11 +56,17 @@ export default {
           `/query?function=FX_DAILY&from_symbol=${event.from_symbol}&to_symbol=${event.to_symbol}&apikey=NRUUDHFS7BXY9FE2`
         )
         .then((res) => {
+          if (this.marketHistory.length > 0) {
+            this.marketHistory = [];
+            this.historyDates = [];
+            this.prices = [];
+          }
           this.isLoading = false;
           if (res && res.data) {
             this.marketHistory = res.data["Time Series FX (Daily)"];
             for (const property in this.marketHistory) {
-              this.prices = this.marketHistory[property]["4. close"];
+              let price = this.marketHistory[property]["4. close"];
+              this.prices.unshift(price);
               let yesterday = new Date();
               yesterday.setDate(yesterday.getDate() - 1);
               let yesterdayDate = yesterday.toISOString().slice(0, 10);
@@ -126,7 +132,7 @@ export default {
         chartWithKey.destroy();
       }
       this.myChart = new Chart(myChart, {
-        type: 'bar',
+        type: 'line',
         data: data,
       })
     }

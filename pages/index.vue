@@ -45,6 +45,11 @@ export default {
   },
   methods: {
     async fetchData(symbol) {
+      if (this.marketHistory.length > 0) {
+        this.marketHistory = [];
+        this.historyDates = [];
+        this.prices = [];
+      }
       this.symbol = symbol;
       this.isLoading = true;
       await this.$axios
@@ -56,7 +61,8 @@ export default {
           if (res && res.data) {
             this.marketHistory = res.data["Time Series (Daily)"];
             for (const property in this.marketHistory) {
-              this.prices = this.marketHistory[property]["4. close"];
+              let price = this.marketHistory[property]["4. close"];
+              this.prices.unshift(price);
               let yesterday = new Date();
               yesterday.setDate(yesterday.getDate() - 1);
               let yesterdayDate = yesterday.toISOString().slice(0, 10);
@@ -90,7 +96,7 @@ export default {
         });
     },
     updateChart() {
-      const myChart = document.getElementById('myChart').getContext('2d');
+      const myChart = document.getElementById('myChart');
       const labels = this.historyDates;
       const data = {
         labels: labels,
@@ -105,13 +111,6 @@ export default {
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            scales: {
-              yAxes: [{
-                ticks: {
-                  beginAtZero: true
-                }
-              }]
-            }
           }
         }]
       }
