@@ -42,6 +42,12 @@ export default {
       user: "user",
     }),
   },
+  created() {
+    const user = localStorage.getItem("user");
+    if (user) {
+      this.$store.dispatch("setUser", JSON.parse(user));
+    }
+  },
   methods: {
     logout() {
       this.$store.dispatch("logout");

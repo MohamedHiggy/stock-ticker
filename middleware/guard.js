@@ -1,5 +1,5 @@
 export default async function({ $auth, redirect, store }) {
-  let user = store.state.user;
+  let user = localStorage.getItem("user");
   if (user) {
     redirect("/stock-prices")
   }
