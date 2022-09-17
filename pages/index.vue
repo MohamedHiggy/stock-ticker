@@ -13,16 +13,18 @@
       <StockMockupCard :stock="stock" />
     </div>
 
-    <!-- fx chart -->
-    <div class="w-[1200px] mx-auto">
-      <canvas id="myChart"></canvas>
-    </div>
+    <!-- Chart -->
+    <TheChart
+      :historyDates="historyDates"
+      :prices="prices"
+      :isCalling="isCalling"
+      :label="'Stock Prices'"
+    />
   </div>
 </template>
 
 <script>
 import symbolsExamples from "../data/symbolsExamples";
-import Chart from 'chart.js/auto';
 export default {
   name: "StockPricesPage",
   data() {
@@ -35,7 +37,7 @@ export default {
       marketHistory: [],
       historyDates: [],
       prices: [],
-      myChart: null,
+      isCalling: false,
     };
   },
   computed: {
@@ -77,7 +79,10 @@ export default {
               }
               let formattedYear = property.replace(/(\d{4})-(\d{2})-(\d{2})/, '$2/$3/$1');
               this.historyDates.unshift(formattedYear);
-              this.updateChart();
+              this.isCalling = true;
+              setTimeout(() => {
+                this.isCalling = false;
+              }, 300);
             }
           }
           if (res && res.data["Error Message"]) {
@@ -95,34 +100,6 @@ export default {
           }
         });
     },
-    updateChart() {
-      const myChart = document.getElementById('myChart');
-      const labels = this.historyDates;
-      const data = {
-        labels: labels,
-        datasets: [{
-          label: 'Stock Market Price',
-          data: this.prices,
-          fill: false,
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          borderColor: 'rgba(255,99,132,1)',
-          tension: 0,
-          borderWidth: 2,
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-          }
-        }]
-      }
-      const chartWithKey = Chart.getChart('myChart');
-      if (chartWithKey != undefined) {
-        chartWithKey.destroy();
-      }
-      this.myChart = new Chart(myChart, {
-        type: 'line',
-        data: data,
-      })
-    }
   },
 };
 </script>

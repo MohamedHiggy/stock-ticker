@@ -6,25 +6,30 @@
     </p>
 
     <!-- header actions btn, input, and select box-->
-    <HeaderActionForm @addSymbol="fetchData" :isLoading="isLoading" :items="currency" :is-fx="true" />
-
+    <HeaderActionForm
+      @addSymbol="fetchData"
+      :isLoading="isLoading"
+      :items="currency"
+      :is-fx="true"
+    />
 
     <!-- stock card-->
     <div v-if="stock" class="flex items-center justify-center my-4">
       <StockMockupCard :stock="stock" />
     </div>
 
-
-    <!-- fx chart -->
-    <div class="w-[1200px] mx-auto">
-      <canvas id="myChart"></canvas>
-    </div>
+    <!-- Chart -->
+    <TheChart
+      :historyDates="historyDates"
+      :prices="prices"
+      :isCalling="isCalling"
+      :label="'Foreign currency Exchange'"
+    />
   </div>
 </template>
 
 <script>
 import foreignExchange from "../data/foreignExchange";
-import Chart from 'chart.js/auto';
 export default {
   name: "StockPricesPage",
   data() {
@@ -38,7 +43,7 @@ export default {
       marketHistory: [],
       historyDates: [],
       prices: [],
-      myChart: null,
+      isCalling: false,
     };
   },
   computed: {
@@ -48,6 +53,11 @@ export default {
   },
   methods: {
     async fetchData(event) {
+      if (this.marketHistory.length > 0) {
+        this.marketHistory = [];
+        this.historyDates = [];
+        this.prices = [];
+      }
       this.from_symbol = event.from_symbol;
       this.to_symbol = event.to_symbol;
       this.isLoading = true;
@@ -56,11 +66,6 @@ export default {
           `/query?function=FX_DAILY&from_symbol=${event.from_symbol}&to_symbol=${event.to_symbol}&apikey=NRUUDHFS7BXY9FE2`
         )
         .then((res) => {
-          if (this.marketHistory.length > 0) {
-            this.marketHistory = [];
-            this.historyDates = [];
-            this.prices = [];
-          }
           this.isLoading = false;
           if (res && res.data) {
             this.marketHistory = res.data["Time Series FX (Daily)"];
@@ -80,9 +85,15 @@ export default {
                   low: this.marketHistory[property]["3. low"],
                 };
               }
-              let formattedYear = property.replace(/(\d{4})-(\d{2})-(\d{2})/, '$2/$3/$1');
+              let formattedYear = property.replace(
+                /(\d{4})-(\d{2})-(\d{2})/,
+                "$2/$3/$1"
+              );
               this.historyDates.unshift(formattedYear);
-              this.updateChart();
+              this.isCalling = true;
+              setTimeout(() => {
+                this.isCalling = false;
+              }, 300);
             }
           }
           if (res && res.data["Error Message"]) {
@@ -100,42 +111,6 @@ export default {
           }
         });
     },
-    updateChart() {
-      const myChart = document.getElementById('myChart').getContext('2d');
-      const labels = this.historyDates;
-      const data = {
-        labels: labels,
-        datasets: [{
-          label: 'Foreign currency Exchange',
-          data: this.prices,
-          fill: false,
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          borderColor: 'rgba(255,99,132,1)',
-          tension: 0,
-          borderWidth: 2,
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              yAxes: [{
-                ticks: {
-                  beginAtZero: true
-                }
-              }]
-            }
-          }
-        }]
-      }
-
-      const chartWithKey = Chart.getChart('myChart');
-      if (chartWithKey != undefined) {
-        chartWithKey.destroy();
-      }
-      this.myChart = new Chart(myChart, {
-        type: 'line',
-        data: data,
-      })
-    }
   },
 };
 </script>
