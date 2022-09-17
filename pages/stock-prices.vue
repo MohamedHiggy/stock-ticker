@@ -9,8 +9,7 @@
     <HeaderActionForm
       @addSymbol="fetchData"
       :isLoading="isLoading"
-      :items="currency"
-      :is-fx="true"
+      :items="symbols"
     />
 
     <!-- stock card-->
@@ -19,8 +18,8 @@
       class="flex items-center justify-center gap-3 flex-wrap my-4"
     >
       <StockMockupCard
-        v-for="(item, index) in stocks"
-        :key="index"
+        v-for="item in stocks"
+        :key="item.symbol"
         :stock="item"
         @deleteStock="deleteStock"
       />
@@ -32,23 +31,23 @@
       :historyDates="historyDates"
       :prices="prices"
       :isCalling="isCalling"
-      :label="'Foreign currency Exchange'"
+      :label="'Stock Prices'"
     />
   </div>
 </template>
 
 <script>
-import foreignExchange from "../data/foreignExchange";
+import symbolsExamples from "../data/symbolsExamples";
 export default {
-  name: "ForeignCurrencyPage",
+  name: "StockPricesPage",
+  middleware: ["isUser"],
   data() {
     return {
-      from_symbol: "",
-      to_symbol: "",
+      symbol: "",
+      stocks: [],
       isLoading: false,
       errorMsg: "data not found",
       isErrorMsg: false,
-      stocks: [],
       marketHistory: [],
       historyDates: [],
       prices: [],
@@ -56,30 +55,17 @@ export default {
     };
   },
   computed: {
-    currency() {
-      return foreignExchange;
+    symbols() {
+      return symbolsExamples;
     },
   },
   methods: {
     deleteStock(stock) {
-      this.stocks.filter((item) =>{
-        if (item.from_symbol === stock.from_symbol && item.to_symbol === stock.to_symbol){
-          this.stocks.splice(item, 1);
-        }
-      });
-
-      this.marketHistory.filter((item) =>{
-        if (item.from_symbol === stock.from_symbol && item.to_symbol === stock.to_symbol){
-          this.marketHistory.splice(item, 1);
-        }
-      });
-
-      this.prices.filter((item) =>{
-        if (item.from_symbol === stock.from_symbol && item.to_symbol === stock.to_symbol){
-          this.prices.splice(item, 1);
-        }
-      });
-
+      this.stocks = this.stocks.filter((item) => item.symbol !== stock.symbol);
+      this.prices = this.prices.filter((item) => item.symbol !== stock.symbol);
+      this.marketHistory = this.marketHistory.filter(
+        (item) => item.symbol !== stock.symbol
+      );
       this.isCalling = true;
       setTimeout(() => {
         this.isCalling = false;
@@ -87,79 +73,63 @@ export default {
     },
     checkIfExist(data, array) {
       if (array.length) {
-        const isExist = array.find(
-          (item) =>
-            item.from_symbol === this.from_symbol &&
-            item.to_symbol === this.to_symbol
-        );
+        const isExist = array.find((item) => item.symbol === this.symbol);
         if (isExist) {
           isExist.data = data;
         } else {
           array.push({
-            from_symbol: this.from_symbol,
-            to_symbol: this.to_symbol,
+            symbol: this.symbol,
             data: data,
           });
         }
       } else {
         array.push({
-          from_symbol: this.from_symbol,
-          to_symbol: this.to_symbol,
+          symbol: this.symbol,
           data: data,
         });
       }
     },
-    async fetchData(event) {
+    async fetchData(symbol) {
       this.historyDates = [];
-      this.from_symbol = event.from_symbol;
-      this.to_symbol = event.to_symbol;
+      this.symbol = symbol;
       this.isLoading = true;
       await this.$axios
         .get(
-          `/query?function=FX_DAILY&from_symbol=${event.from_symbol}&to_symbol=${event.to_symbol}&apikey=NRUUDHFS7BXY9FE2`
+          `/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=NRUUDHFS7BXY9FE2`
         )
         .then((res) => {
           this.isLoading = false;
           if (res && res.data) {
             this.checkIfExist(
-              res.data["Time Series FX (Daily)"],
+              res.data["Time Series (Daily)"],
               this.marketHistory
             );
             const prices = [];
-            for (const key in res.data["Time Series FX (Daily)"]) {
-              prices.push(res.data["Time Series FX (Daily)"][key]["4. close"]);
+            for (const key in res.data["Time Series (Daily)"]) {
+              prices.push(res.data["Time Series (Daily)"][key]["4. close"]);
             }
             this.checkIfExist(prices, this.prices);
 
-            let items = res.data["Time Series FX (Daily)"];
+            let items = res.data["Time Series (Daily)"];
             for (const property in items) {
               let yesterday = new Date();
               yesterday.setDate(yesterday.getDate() - 1);
               let yesterdayDate = yesterday.toISOString().slice(0, 10);
               if (property === yesterdayDate) {
                 const stock = {
-                  from_symbol: this.from_symbol,
-                  to_symbol: this.to_symbol,
+                  symbol: symbol,
                   open: items[property]["1. open"],
                   close: items[property]["4. close"],
                   high: items[property]["2. high"],
                   low: items[property]["3. low"],
                 };
                 if (
-                  this.stocks.findIndex(
-                    (item) =>
-                      item.from_symbol === event.from_symbol &&
-                      item.to_symbol === event.to_symbol
-                  ) === -1
+                  this.stocks.findIndex((item) => item.symbol === symbol) === -1
                 ) {
                   this.stocks.push(stock);
                 } else {
                   this.stocks.splice(
-                    this.stocks.findIndex(
-                      (item) =>
-                        item.from_symbol === event.from_symbol &&
-                        item.to_symbol === event.to_symbol
-                    ),
+                    this.stocks.findIndex((item) => item.symbol === symbol),
                     1,
                     stock
                   );
