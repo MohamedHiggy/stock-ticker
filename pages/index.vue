@@ -1,17 +1,28 @@
 <template>
   <div>
+    <!-- Error Msg-->
     <p v-if="isErrorMsg" class="text-red-500 font-bold text-xl">
       {{ errorMsg }}
     </p>
+
+    <!-- header actions btn, input, and select box-->
     <HeaderActionForm @addSymbol="fetchData" :isLoading="isLoading" :items="symbols" />
-    <div v-if="stock" class="flex items-center justify-center mt-4">
+
+    <!-- stock card-->
+    <div v-if="stock" class="flex items-center justify-center my-4">
       <StockMockupCard :stock="stock" />
+    </div>
+
+    <!-- fx chart -->
+    <div class="w-[1200px] mx-auto">
+      <canvas id="myChart"></canvas>
     </div>
   </div>
 </template>
 
 <script>
 import symbolsExamples from "../data/symbolsExamples";
+import Chart from 'chart.js/auto';
 export default {
   name: "StockPricesPage",
   data() {
@@ -21,11 +32,11 @@ export default {
       isLoading: false,
       errorMsg: "data not found",
       isErrorMsg: false,
-      stockMarketHistory: [],
+      marketHistory: [],
+      historyDates: [],
+      prices: [],
+      myChart: null,
     };
-  },
-  mounted() {
-    this.fetchData(this.symbol);
   },
   computed: {
     symbols() {
@@ -43,20 +54,24 @@ export default {
         .then((res) => {
           this.isLoading = false;
           if (res && res.data) {
-            this.stockMarketHistory = res.data["Time Series (Daily)"];
-            for (const property in this.stockMarketHistory) {
+            this.marketHistory = res.data["Time Series (Daily)"];
+            for (const property in this.marketHistory) {
+              this.prices = this.marketHistory[property]["4. close"];
               let yesterday = new Date();
               yesterday.setDate(yesterday.getDate() - 1);
               let yesterdayDate = yesterday.toISOString().slice(0, 10);
               if (property === yesterdayDate) {
                 this.stock = {
                   symbol: symbol,
-                  open: this.stockMarketHistory[property]["1. open"],
-                  close: this.stockMarketHistory[property]["4. close"],
-                  high: this.stockMarketHistory[property]["2. high"],
-                  low: this.stockMarketHistory[property]["3. low"],
+                  open: this.marketHistory[property]["1. open"],
+                  close: this.marketHistory[property]["4. close"],
+                  high: this.marketHistory[property]["2. high"],
+                  low: this.marketHistory[property]["3. low"],
                 };
               }
+              let formattedYear = property.replace(/(\d{4})-(\d{2})-(\d{2})/, '$2/$3/$1');
+              this.historyDates.unshift(formattedYear);
+              this.updateChart();
             }
           }
           if (res && res.data["Error Message"]) {
@@ -74,6 +89,41 @@ export default {
           }
         });
     },
+    updateChart() {
+      const myChart = document.getElementById('myChart').getContext('2d');
+      const labels = this.historyDates;
+      const data = {
+        labels: labels,
+        datasets: [{
+          label: 'Stock Market Price',
+          data: this.prices,
+          fill: false,
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgba(255,99,132,1)',
+          tension: 0,
+          borderWidth: 2,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              yAxes: [{
+                ticks: {
+                  beginAtZero: true
+                }
+              }]
+            }
+          }
+        }]
+      }
+      const chartWithKey = Chart.getChart('myChart');
+      if (chartWithKey != undefined) {
+        chartWithKey.destroy();
+      }
+      this.myChart = new Chart(myChart, {
+        type: 'line',
+        data: data,
+      })
+    }
   },
 };
 </script>

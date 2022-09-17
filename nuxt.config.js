@@ -34,13 +34,8 @@ export default {
   ],
 
   modules: [
-    '@nuxtjs/axios',
-    'nuxt-highcharts'
+    '@nuxtjs/axios'
   ],
-
-  highcharts: {
-    exporting: true,
-  },
 
   axios: {
     baseURL: 'https://www.alphavantage.co/',

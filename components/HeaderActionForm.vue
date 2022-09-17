@@ -1,41 +1,118 @@
 <template>
   <div class="flex items-center justify-start gap-4 flex-wrap mb-10">
-    <input v-if="!isFx" type="text" v-model="symbol"
-      class="w-52 font-light px-6 py-2 rounded-[10px] border border-[#ACB2BF] focus:outline-none placeholder:text-[#ACB2BF] text-base placeholder:text-sm placeholder:tracking-[0.75px] text-[#ACB2BF]" />
+    <input v-if="!isFx" type="text" v-model="symbol" class="
+        w-52
+        font-light
+        px-6
+        py-2
+        rounded-[10px]
+        border border-[#ACB2BF]
+        focus:outline-none
+        placeholder:text-[#ACB2BF]
+        text-base
+        placeholder:text-sm placeholder:tracking-[0.75px]
+        text-[#ACB2BF]
+      " />
     <div class="dropdown inline-block relative">
-      <button type="button" class="bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded inline-flex items-center">
+      <button type="button" class="
+          bg-gray-300
+          text-gray-700
+          font-semibold
+          py-2
+          px-4
+          rounded
+          inline-flex
+          items-center
+        ">
         <span class="mr-1">{{ isFx ? from_symbol : symbol }}</span>
         <svg class="fill-current h-4 w-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
           <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
         </svg>
       </button>
-      <ul class="w-[300px] dropdown-menu absolute hidden text-gray-700 pt-2 z-10 shadow h-80 overflow-y-auto">
+      <ul class="
+          w-[300px]
+          dropdown-menu
+          absolute
+          hidden
+          text-gray-700
+          pt-2
+          z-10
+          shadow
+          h-80
+          overflow-y-auto
+        ">
         <li v-for="item in items" :key="item.symbol" class="cursor-pointer"
-          @click="isFx ? from_symbol = item.symbol : symbol = item.symbol">
-          <p class="rounded-t bg-gray-50 hover:bg-gray-400 py-2 px-4 block whitespace-no-wrap">
+          @click="isFx ? (from_symbol = item.symbol) : (symbol = item.symbol)">
+          <p class="
+              rounded-t
+              bg-gray-50
+              hover:bg-gray-400
+              py-2
+              px-4
+              block
+              whitespace-no-wrap
+            ">
             {{ item.symbol }} - {{ item.name }}
           </p>
         </li>
       </ul>
     </div>
     <div v-if="isFx" class="dropdown inline-block relative">
-      <button type="button" class="bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded inline-flex items-center">
+      <button type="button" class="
+          bg-gray-300
+          text-gray-700
+          font-semibold
+          py-2
+          px-4
+          rounded
+          inline-flex
+          items-center
+        ">
         <span class="mr-1">{{ to_symbol }}</span>
         <svg class="fill-current h-4 w-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
           <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
         </svg>
       </button>
-      <ul class="w-[300px] dropdown-menu absolute hidden text-gray-700 pt-2 z-10 shadow h-80 overflow-y-auto">
+      <ul class="
+          w-[300px]
+          dropdown-menu
+          absolute
+          hidden
+          text-gray-700
+          pt-2
+          z-10
+          shadow
+          h-80
+          overflow-y-auto
+        ">
         <li v-for="item in items" :key="item.symbol" class="cursor-pointer" @click="to_symbol = item.symbol">
-          <p class="rounded-t bg-gray-50 hover:bg-gray-400 py-2 px-4 block whitespace-no-wrap">
+          <p class="
+              rounded-t
+              bg-gray-50
+              hover:bg-gray-400
+              py-2
+              px-4
+              block
+              whitespace-no-wrap
+            ">
             {{ item.symbol }} - {{ item.name }}
           </p>
         </li>
       </ul>
     </div>
-    <button class="w-36 bg-gray-600 rounded-lg px-6 py-2 text-white flex items-center justify-center gap-2"
-      type="button" @click=" addSymbol">
-      Add
+    <button class="
+        w-36
+        bg-gray-600
+        rounded-lg
+        px-6
+        py-2
+        text-white
+        flex
+        items-center
+        justify-center
+        gap-2
+      " type="button" @click="addSymbol">
+      Get data
       <svg v-if="isLoading" class="w-4 h-4 text-white animate-spin dark:text-white fill-gray-600" viewBox="0 0 100 101"
         fill="none" xmlns="http://www.w3.org/2000/svg">
         <path
@@ -77,8 +154,12 @@ export default {
     this.checkRouter();
   },
   watch: {
-    $route() {
-      this.checkRouter();
+    $route(e) {
+      if (
+        e.params && !this.isLoading
+      ) {
+        this.addSymbol();
+      }
     },
   },
   methods: {
@@ -94,6 +175,9 @@ export default {
       if (this.isFx && fromSymbol && toSymbol) {
         this.from_symbol = fromSymbol;
         this.to_symbol = toSymbol;
+        this.addSymbol();
+      }
+      if (!fromSymbol && !toSymbol && !symbol) {
         this.addSymbol();
       }
     },
