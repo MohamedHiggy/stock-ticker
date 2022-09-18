@@ -1,7 +1,5 @@
 <template>
-  <div class="w-[1200px] mx-auto">
-    <canvas id="myChart"></canvas>
-  </div>
+    <canvas id="myChart" width="400px" height="150px"></canvas>
 </template>
 
 <script>
@@ -44,6 +42,7 @@ export default {
       const myChart = document.getElementById("myChart");
       const labels = this.historyDates;
       let newPrices = [];
+
       this.prices.forEach((price) => {
         newPrices.push({
           label: price.symbol ? price.symbol : price.from_symbol + " to " + price.to_symbol,
@@ -65,15 +64,23 @@ export default {
           },
         });
       });
+
       const data = {
         labels: labels,
         datasets: newPrices,
       };
+
+
+      // fix for chart.js that canvas take display: none
+      myChart.style.display = "block";
+
       // to avoid multiple chart instances on the same canvas
       const chartWithKey = Chart.getChart("myChart");
       if (chartWithKey != undefined) {
         chartWithKey.destroy();
       }
+
+
       // update chart
       this.myChart = new Chart(myChart, {
         type: "line",
